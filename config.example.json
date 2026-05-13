@@ -1,0 +1,17 @@
+{
+  "ai_enabled": false,
+  "ai_provider": "claude",
+  "ai_api_key": "在此填入你的API Key",
+  "ai_base_url": "https://api.anthropic.com",
+  "ai_model": "claude-sonnet-4-6",
+  "use_custom_model": false,
+  "ai_timeout": 380,
+  "ai_max_tokens": 28192,
+  "ai_profiles": [],
+  "ai_active_profile": 0,
+  "export_format": "Word (.docx)",
+  "export_dir": "",
+  "font_scale": 100,
+  "auto_save": true,
+  "ai_custom_model": ""
+}

@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>离职交接助手</title>
+<link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+<!-- ==================== 第一层：公司选择 ==================== -->
+<div class="company-page" id="companyPage">
+    <div class="company-header"><h1>离职交接助手</h1></div>
+    <div class="company-body">
+        <h1>离职交接助手</h1>
+        <p>选择一个公司开始管理交接内容</p>
+        <div class="company-grid" id="companyGrid">
+            <!-- 动态渲染 -->
+        </div>
+    </div>
+</div>
+
+<!-- ==================== 第二层：工作区 ==================== -->
+<div class="workspace" id="workspace">
+    <!-- 标题栏 -->
+    <div class="ws-titlebar">
+        <div class="ws-left">
+            <span class="ws-company" id="wsCompanyName">公司名称</span>
+        </div>
+        <div class="ws-right">
+            <div class="ai-dot off" id="aiDot"></div>
+            <span class="ai-label" id="aiLabel">AI 未配置</span>
+            <button class="settings-btn" onclick="openModal('settingsModal')" title="设置">⚙</button>
+        </div>
+    </div>
+    <!-- 返回键行 -->
+    <div class="back-bar">
+        <div class="back-btn" onclick="handleBack()">← 返回<span class="back-company" id="backHint"></span></div>
+    </div>
+
+    <!-- 滚动内容 -->
+    <div class="ws-content" id="wsContent">
+
+        <!-- ========== 主页 ========== -->
+        <div class="sub-page active" id="page-home">
+            <!-- 倒计时 + 生成报告 -->
+            <div class="top-area">
+                <div class="countdown-box">
+                    <div class="cd-left">
+                        <div class="cd-label">距离离职还有</div>
+                        <div class="cd-big"><span id="countdownDays">--</span> <span class="cd-unit">天</span></div>
+                    </div>
+                    <div class="cd-right">
+                        <div class="cd-date" id="countdownDate">📅 离职日期：未设置</div>
+                    </div>
+                </div>
+                <div class="export-btn-box">
+                    <button class="export-btn" onclick="openModal('reportModal')">📋<br>生成报告</button>
+                </div>
+            </div>
+
+            <!-- 统计 -->
+            <div class="stat-row">
+                <div class="stat-card"><div class="label">项目数量</div><div class="value" id="statProjects">0</div></div>
+                <div class="stat-card"><div class="label">待办事项</div><div class="value" id="statTodos">0</div></div>
+                <div class="stat-card"><div class="label">文档数量</div><div class="value" id="statDocs">0</div></div>
+                <div class="stat-card"><div class="label">交接进度</div><div class="value" id="statProgress">0%</div><div class="progress-bar" style="margin-top:6px"><div class="fill" id="statProgressBar" style="width:0%"></div></div></div>
+            </div>
+
+            <!-- 项目管理入口卡片 -->
+            <div class="entry-card" onclick="goPage('page-project')">
+                <div class="entry-left">
+                    <div class="entry-icon">📁</div>
+                    <div class="entry-info">
+                        <div class="entry-title">项目管理</div>
+                        <div class="entry-desc" id="projectSummary">0个项目</div>
+                    </div>
+                </div>
+                <div class="entry-right"><span class="entry-arrow">▶</span></div>
+            </div>
+
+            <!-- 文档管理入口卡片 -->
+            <div class="entry-card" onclick="goPage('page-document')">
+                <div class="entry-left">
+                    <div class="entry-icon">📄</div>
+                    <div class="entry-info">
+                        <div class="entry-title">文档管理</div>
+                        <div class="entry-desc" id="docSummary">0份文档</div>
+                    </div>
+                </div>
+                <div class="entry-right"><span class="entry-arrow">▶</span></div>
+            </div>
+
+            <!-- 交接信息入口卡片 -->
+            <div class="entry-card" onclick="goPage('page-handover')">
+                <div class="entry-left">
+                    <div class="entry-icon">🔄</div>
+                    <div class="entry-info">
+                        <div class="entry-title">交接信息</div>
+                        <div class="entry-desc">账号交接 · 待办事项 · 联系人 · 交接日程</div>
+                    </div>
+                </div>
+                <div class="entry-right"><span class="entry-arrow">▶</span></div>
+            </div>
+        </div>
+
+        <!-- ========== 项目管理子页面 ========== -->
+        <div class="sub-page" id="page-project">
+            <div class="sub-header">
+                <h2>📁 项目管理</h2>
+                <div style="display:flex;gap:8px">
+                    <!-- 修改时间：2026/05/12 - 新增导出HTML按钮 -->
+                    <button class="btn btn-outline" onclick="exportProjectsHtml()">导出HTML</button>
+                    <button class="btn btn-primary" onclick="openModuleModal()">+ 添加模块</button>
+                </div>
+            </div>
+            <div id="moduleList">
+                <!-- 动态渲染模块+项目 -->
+            </div>
+        </div>
+
+        <!-- ========== 文档管理子页面 ========== -->
+        <div class="sub-page" id="page-document">
+            <div class="sub-header">
+                <h2>📄 文档管理</h2>
+                <button class="btn btn-primary" onclick="openDocModal()">+ 导入文档</button>
+            </div>
+            <div id="documentList">
+                <!-- 动态渲染 -->
+            </div>
+        </div>
+
+        <!-- ========== 交接信息子页面（Tab） ========== -->
+        <div class="sub-page" id="page-handover">
+            <div class="sub-header"><h2>🔄 交接信息</h2></div>
+            <div class="card">
+                <div class="tabs">
+                    <div class="tab-item active" onclick="switchTab('tab-account',this)">🔑 账号交接</div>
+                    <div class="tab-item" onclick="switchTab('tab-todo',this)">✅ 待办事项</div>
+                    <div class="tab-item" onclick="switchTab('tab-contact',this)">👥 联系人</div>
+                    <div class="tab-item" onclick="switchTab('tab-schedule',this)">📅 交接日程</div>
+                </div>
+                <!-- 账号 -->
+                <div class="tab-panel active" id="tab-account">
+                    <div style="display:flex;justify-content:flex-end;margin-bottom:10px"><button class="btn btn-primary btn-sm" onclick="openAccountModal()">+ 添加账号</button></div>
+                    <table>
+                        <thead><tr><th>系统/平台</th><th>类型</th><th>用途</th><th>状态</th><th>操作</th></tr></thead>
+                        <tbody id="accountTableBody"></tbody>
+                    </table>
+                    <div style="font-size:11px;color:#e6a23c;margin-top:10px">⚠️ 密码加密存储，报告不含明文</div>
+                </div>
+                <!-- 待办 -->
+                <div class="tab-panel" id="tab-todo">
+                    <div style="display:flex;justify-content:flex-end;margin-bottom:10px"><button class="btn btn-primary btn-sm" onclick="openTodoModal()">+ 添加待办</button></div>
+                    <div id="todoList"></div>
+                </div>
+                <!-- 联系人 -->
+                <div class="tab-panel" id="tab-contact">
+                    <div style="display:flex;justify-content:flex-end;margin-bottom:10px"><button class="btn btn-primary btn-sm" onclick="openContactModal()">+ 添加联系人</button></div>
+                    <table>
+                        <thead><tr><th>姓名</th><th>角色</th><th>负责接手</th><th>联系方式</th><th>备注</th><th>操作</th></tr></thead>
+                        <tbody id="contactTableBody"></tbody>
+                    </table>
+                </div>
+                <!-- 日程 -->
+                <div class="tab-panel" id="tab-schedule">
+                    <div style="display:flex;justify-content:flex-end;margin-bottom:10px"><button class="btn btn-primary btn-sm" onclick="openScheduleModal()">+ 添加事项</button></div>
+                    <div class="timeline" id="scheduleTimeline"></div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- 返回顶部 -->
+<button class="back-top" id="backTop" onclick="document.getElementById('wsContent').scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+<!-- ==================== 弹窗 ==================== -->
+
+<!-- 创建公司 -->
+<div class="modal-overlay" id="companyModal">
+    <div class="modal">
+        <div class="modal-header"><h3>创建公司</h3><button class="modal-close" onclick="closeModal('companyModal')">&times;</button></div>
+        <div class="modal-body">
+            <div class="form-row"><div class="form-group"><label>公司名称 *</label><input id="cName" placeholder="请输入公司名称"></div><div class="form-group"><label>所在部门</label><input id="cDept" placeholder="如：研发部"></div></div>
+            <div class="form-row"><div class="form-group"><label>职位</label><input id="cPos" placeholder="你的职位"></div><div class="form-group"></div></div>
+            <div class="form-row"><div class="form-group"><label>入职日期</label><input type="date" id="cStart"></div><div class="form-group"><label>预计离职日期</label><input type="date" id="cLeave"></div></div>
+            <div class="form-group"><label>备注</label><textarea id="cNote" placeholder="补充说明（选填）"></textarea></div>
+        </div>
+        <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('companyModal')">取消</button><button class="btn btn-primary" onclick="createCompany()">确认创建</button></div>
+    </div>
+</div>
+
+<!-- 添加/编辑模块 -->
+<div class="modal-overlay" id="moduleModal">
+    <div class="modal">
+        <div class="modal-header"><h3 id="moduleModalTitle">添加模块</h3><button class="modal-close" onclick="closeModal('moduleModal')">&times;</button></div>
+        <div class="modal-body">
+            <div class="form-group"><label>模块名称 *</label><input id="mName" placeholder="如：Android 应用、后端服务"></div>
+            <div class="form-group"><label>备注</label><input id="mNote" placeholder="模块说明（选填）"></div>
+            <!-- 修改时间：2026/05/09 - 新增默认项目地址 -->
+            <div class="form-group">
+                <label>默认项目地址</label>
+                <div style="display:flex;gap:6px">
+                    <input id="mDefaultPath" placeholder="添加项目时自动填入此路径" style="flex:1">
+                    <button class="btn btn-outline" onclick="openBrowser('mDefaultPath')">📁 浏览</button>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('moduleModal')">取消</button><button class="btn btn-primary" onclick="createModule()">确认创建</button></div>
+    </div>
+</div>
+
+<!-- 添加项目 -->
+<div class="modal-overlay" id="projectModal">
+    <div class="modal">
+        <div class="modal-header"><h3>添加项目</h3><button class="modal-close" onclick="closeModal('projectModal')">&times;</button></div>
+        <div class="modal-body">
+            <div class="form-group"><label>项目名称 *</label><input id="pName" placeholder="项目名称"></div>
+            <div class="form-row">
+                <div class="form-group"><label>版本号</label><input id="pVersion" placeholder="如：v1.0"></div>
+                <div class="form-group"><label>状态</label><select id="pStatus"><option>进行中</option><option>已完成</option><option>维护中</option></select></div>
+            </div>
+            <div class="form-group">
+                <label>项目地址</label>
+                <div style="display:flex;gap:6px">
+                    <input id="pPath" placeholder="D:\Projects\your-project" style="flex:1">
+                    <button class="btn btn-outline" onclick="openBrowser('pPath')">📁 浏览</button>
+                </div>
+                <div style="font-size:11px;color:#8c93a8;margin-top:4px">💡 填入项目地址后，可自动生成技术栈、Git地址和简介</div>
+            </div>
+        </div>
+        <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('projectModal')">取消</button><button class="btn btn-primary" onclick="createProject()">确认添加</button></div>
+    </div>
+</div>
+
+<!-- 浏览目录 -->
+<div class="modal-overlay" id="browseModal">
+    <div class="modal" style="width:500px">
+        <div class="modal-header"><h3>📁 选择目录</h3><button class="modal-close" onclick="closeModal('browseModal')">&times;</button></div>
+        <div class="modal-body" style="padding:10px 16px">
+            <div style="display:flex;gap:6px;margin-bottom:10px">
+                <input id="browsePath" style="flex:1;padding:6px 10px;border:1px solid #dcdfe6;border-radius:6px;font-size:12px" placeholder="输入路径或从下方选择">
+                <button class="btn btn-primary btn-sm" onclick="browseTo(document.getElementById('browsePath').value)">前往</button>
+            </div>
+            <div style="border:1px solid #e4e7ed;border-radius:8px;max-height:350px;overflow-y:auto">
+                <div id="browseList" style="padding:4px 0"></div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-outline" onclick="closeModal('browseModal')">取消</button>
+            <button class="btn btn-primary" onclick="confirmBrowse()">选择此目录</button>
+        </div>
+    </div>
+</div>
+
+<!-- 添加账号 -->
+<div class="modal-overlay" id="accountModal">
+    <div class="modal">
+        <div class="modal-header"><h3>添加账号</h3><button class="modal-close" onclick="closeModal('accountModal')">&times;</button></div>
+        <div class="modal-body">
+            <div class="form-row"><div class="form-group"><label>系统/平台 *</label><input id="aPlatform" placeholder="如：GitLab"></div><div class="form-group"><label>类型</label><select id="aType"><option>代码仓库</option><option>云服务</option><option>数据库</option><option>CI/CD</option><option>办公系统</option><option>其他</option></select></div></div>
+            <div class="form-group"><label>用途</label><input id="aUsage" placeholder="该账号用于什么"></div>
+            <div class="form-group"><label>交接状态</label><select id="aStatus"><option>待交接</option><option>已交接</option><option>不需要交接</option></select></div>
+        </div>
+        <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('accountModal')">取消</button><button class="btn btn-primary" onclick="createAccount()">确认添加</button></div>
+    </div>
+</div>
+
+<!-- 添加待办 -->
+<div class="modal-overlay" id="todoModal">
+    <div class="modal">
+        <div class="modal-header"><h3>添加待办</h3><button class="modal-close" onclick="closeModal('todoModal')">&times;</button></div>
+        <div class="modal-body">
+            <div class="form-group"><label>标题 *</label><input id="tTitle" placeholder="待办事项"></div>
+            <div class="form-group"><label>描述</label><textarea id="tDesc" placeholder="详细说明"></textarea></div>
+            <div class="form-row"><div class="form-group"><label>优先级</label><select id="tPriority"><option>普通</option><option>重要</option><option>紧急</option></select></div><div class="form-group"><label>状态</label><select id="tStatus"><option>进行中</option><option>已完成</option></select></div></div>
+        </div>
+        <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('todoModal')">取消</button><button class="btn btn-primary" onclick="createTodo()">确认添加</button></div>
+    </div>
+</div>
+
+<!-- 添加联系人 -->
+<div class="modal-overlay" id="contactModal">
+    <div class="modal">
+        <div class="modal-header"><h3>添加联系人</h3><button class="modal-close" onclick="closeModal('contactModal')">&times;</button></div>
+        <div class="modal-body">
+            <div class="form-row"><div class="form-group"><label>姓名 *</label><input id="ctName" placeholder="姓名"></div><div class="form-group"><label>角色</label><input id="ctRole" placeholder="如：同事、直属上级"></div></div>
+            <div class="form-row"><div class="form-group"><label>负责接手</label><input id="ctScope" placeholder="接手哪些项目/工作"></div><div class="form-group"><label>联系方式</label><input id="ctInfo" placeholder="邮箱/手机"></div></div>
+            <div class="form-group"><label>备注</label><input id="ctNote" placeholder="备注"></div>
+        </div>
+        <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('contactModal')">取消</button><button class="btn btn-primary" onclick="createContact()">确认添加</button></div>
+    </div>
+</div>
+
+<!-- 添加日程 -->
+<div class="modal-overlay" id="scheduleModal">
+    <div class="modal">
+        <div class="modal-header"><h3>添加日程</h3><button class="modal-close" onclick="closeModal('scheduleModal')">&times;</button></div>
+        <div class="modal-body">
+            <div class="form-row"><div class="form-group"><label>日期 *</label><input type="date" id="sDate"></div><div class="form-group"><label>状态</label><select id="sStatus"><option>待进行</option><option>已完成</option></select></div></div>
+            <div class="form-group"><label>内容 *</label><textarea id="sContent" placeholder="日程内容"></textarea></div>
+        </div>
+        <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('scheduleModal')">取消</button><button class="btn btn-primary" onclick="createSchedule()">确认添加</button></div>
+    </div>
+</div>
+
+<!-- 导入文档 -->
+<div class="modal-overlay" id="docModal">
+    <div class="modal">
+        <div class="modal-header"><h3>导入文档</h3><button class="modal-close" onclick="closeModal('docModal')">&times;</button></div>
+        <div class="modal-body">
+            <div class="form-group"><label>文档名称 *</label><input id="dName" placeholder="文档名称"></div>
+            <div class="form-row"><div class="form-group"><label>文件路径</label><input id="dPath" placeholder="文件路径"></div><div class="form-group"><label>文件类型</label><select id="dType"><option>Word</option><option>PDF</option><option>Markdown</option><option>其他</option></select></div></div>
+        </div>
+        <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('docModal')">取消</button><button class="btn btn-primary" onclick="createDocument()">确认导入</button></div>
+    </div>
+</div>
+
+<!-- 生成报告 -->
+<div class="modal-overlay" id="reportModal">
+    <div class="modal" style="width:560px">
+        <div class="modal-header"><h3>📋 生成交接报告</h3><button class="modal-close" onclick="closeModal('reportModal')">&times;</button></div>
+        <div class="modal-body">
+            <div style="font-size:12px;color:#8c93a8;margin-bottom:12px">勾选需要包含的内容</div>
+            <!-- 修改时间：2026/05/12 - 去掉Git提交记录和文档管理模块，增加文件名和目录选择 -->
+            <div class="report-checks" id="reportChecks">
+                <label class="report-check"><input type="checkbox" checked value="company"><div><div class="rc-title">🏢 公司基本信息</div><div class="rc-desc">公司名称、部门、在职时间</div></div></label>
+                <label class="report-check"><input type="checkbox" checked value="projects"><div><div class="rc-title">📁 项目清单</div><div class="rc-desc">所有项目 · Git地址 · 技术栈</div></div></label>
+                <label class="report-check"><input type="checkbox" checked value="accounts"><div><div class="rc-title">🔑 账号交接清单</div><div class="rc-desc">所有账号 · 不含密码明文</div></div></label>
+                <label class="report-check"><input type="checkbox" checked value="todos"><div><div class="rc-title">✅ 待办事项及问题</div><div class="rc-desc">待办事项 · 已知Bug</div></div></label>
+                <label class="report-check"><input type="checkbox" checked value="contacts"><div><div class="rc-title">👥 联系人信息</div><div class="rc-desc">对接人及接手分配</div></div></label>
+                <label class="report-check"><input type="checkbox" checked value="schedule"><div><div class="rc-title">📅 交接日程</div><div class="rc-desc">时间节点</div></div></label>
+            </div>
+            <div class="form-row" style="margin-top:14px">
+                <div class="form-group"><label>导出格式</label><select id="reportFormat"><option>Word (.docx)</option><option>Markdown (.md)</option></select></div>
+                <div class="form-group"><label>文件名</label><input id="reportFileName" placeholder="默认自动生成"></div>
+            </div>
+            <div class="form-row" style="margin-top:8px">
+                <div class="form-group" style="flex:1"><label>保存目录</label><div style="display:flex;gap:8px"><input id="reportExportDir" style="flex:1" placeholder="默认桌面"><button class="btn btn-outline btn-sm" onclick="openBrowser('reportExportDir')">浏览</button></div></div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-outline" onclick="closeModal('reportModal')">取消</button>
+            <button class="btn btn-success" onclick="exportReport()">📋 生成并导出</button>
+        </div>
+    </div>
+</div>
+
+<!-- 交接文档预览 -->
+<!-- 修改时间：2026/05/09 - 多文档预览弹窗，支持左右切换 -->
+<div class="modal-overlay" id="docPreviewModal">
+    <div class="modal" style="width:700px;max-height:85vh">
+        <div class="modal-header">
+            <button class="btn btn-outline btn-sm" onclick="switchDoc(-1)" id="docPrevBtn" style="display:none">◀ 上一个</button>
+            <h3 style="flex:1;text-align:center">📄 <span id="docPreviewTitle">交接文档预览</span></h3>
+            <button class="modal-close" onclick="closeModal('docPreviewModal')">&times;</button>
+            <button class="btn btn-outline btn-sm" onclick="switchDoc(1)" id="docNextBtn" style="display:none">下一个 ▶</button>
+        </div>
+        <div class="modal-body" style="max-height:60vh;overflow-y:auto">
+            <div id="docPreviewContent" class="md-preview"></div>
+        </div>
+        <div class="modal-footer">
+            <span style="font-size:11px;color:#8c93a8;flex:1" id="docPreviewPath"></span>
+            <button class="btn btn-outline" onclick="closeModal('docPreviewModal')">关闭</button>
+        </div>
+    </div>
+</div>
+
+<!-- 设置 -->
+<div class="modal-overlay" id="settingsModal">
+    <div class="modal" style="width:540px">
+        <div class="modal-header"><h3>⚙ 设置</h3><button class="modal-close" onclick="closeModal('settingsModal')">&times;</button></div>
+        <div class="modal-body">
+            <div class="setting-section">
+                <div class="section-title">🤖 AI 功能</div>
+                <div class="toggle-row">
+                    <div class="toggle-label">启用 AI 辅助<small>文档分析、自动生成交接文档</small></div>
+                    <div class="toggle" id="aiToggle" onclick="toggleAI()"></div>
+                </div>
+                <div class="ai-config-area" id="aiConfigArea" style="display:none">
+                    <!-- 修改时间：2026/05/09 - AI多配置卡片列表 -->
+                    <div id="aiProfileList" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px"></div>
+                    <button class="btn btn-outline btn-sm" onclick="addAIProfile()" style="margin-bottom:12px;font-size:12px">+ 添加配置</button>
+                    <div id="aiProfileEditor" style="display:none">
+                        <div class="form-row">
+                            <div class="form-group"><label>配置名称</label><input id="profileName" placeholder="如：DeepSeek、Claude官方"></div>
+                            <div class="form-group"><label>AI 提供商</label>
+                                <select id="aiProvider" onchange="changeProvider()">
+                                    <option value="claude">Claude (Anthropic)</option>
+                                    <option value="openai">OpenAI</option>
+                                    <option value="custom">自定义</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group"><label>API Key</label><input type="password" id="aiKey" placeholder="sk-ant-xxxxx"></div>
+                        <div class="form-group">
+                            <label>Base URL</label>
+                            <input id="baseUrl" value="https://api.anthropic.com">
+                            <div class="empty-hint">可修改为代理/中转地址</div>
+                        </div>
+                        <div class="form-group">
+                            <label>模型</label>
+                            <div style="display:flex;gap:6px">
+                                <select id="modelSelect" style="flex:1">
+                                    <option value="claude-sonnet-4-6">Claude Sonnet 4.6（推荐）</option>
+                                    <option value="claude-opus-4-6">Claude Opus 4.6（最强）</option>
+                                    <option value="claude-haiku-4-5">Claude Haiku 4.5（最快）</option>
+                                </select>
+                                <input id="customModel" placeholder="自定义模型名" style="flex:1;display:none">
+                            </div>
+                            <label style="font-size:11px;display:flex;align-items:center;gap:4px;color:#8c93a8;margin-top:4px"><input type="checkbox" id="useCustomModel" onchange="toggleCustomModel()"> 手动输入模型名</label>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group"><label>超时时间（秒）</label><input id="aiTimeout" type="number" value="180" min="30" max="600" style="width:100%"><div class="empty-hint">AI请求最大等待时间</div></div>
+                            <div class="form-group"><label>最大 Tokens</label><input id="aiMaxTokens" type="number" value="8192" min="256" max="65536" style="width:100%"><div class="empty-hint">单次生成最大长度</div></div>
+                        </div>
+                        <div style="display:flex;gap:8px;margin-top:8px">
+                            <button class="btn btn-primary btn-sm" onclick="testAI()">🔌 测试连接</button>
+                            <button class="btn btn-outline btn-sm" onclick="deleteAIProfile()" style="color:#e74c3c">🗑 删除此配置</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="setting-section">
+                <div class="section-title">🔤 界面设置</div>
+                <div class="form-group">
+                    <label>字体缩放</label>
+                    <div style="display:flex;align-items:center;gap:10px">
+                        <button class="btn btn-outline btn-sm" onclick="changeFont(-5)" style="font-size:14px;font-weight:700">A-</button>
+                        <span id="fontSizeLabel" style="font-size:14px;font-weight:600;color:#2c3143;min-width:44px;text-align:center">100%</span>
+                        <button class="btn btn-outline btn-sm" onclick="changeFont(5)" style="font-size:14px;font-weight:700">A+</button>
+                        <button class="btn btn-ghost btn-sm" onclick="resetFont()">重置</button>
+                    </div>
+                    <div style="font-size:11px;color:#8c93a8;margin-top:4px">每次调整 ±5%，范围 80% ~ 150%</div>
+                </div>
+            </div>
+            <div class="setting-section">
+                <div class="section-title">📤 导出配置</div>
+                <div class="form-row">
+                    <div class="form-group"><label>默认格式</label><select id="exportFormat"><option>Word (.docx)</option><option>Markdown</option></select></div>
+                    <div class="form-group"><label>导出目录</label><input id="exportDir" placeholder="导出目录路径"></div>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('settingsModal')">取消</button><button class="btn btn-success btn-sm" onclick="saveSettings()">💾 保存</button></div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="/static/js/app.js"></script>
+</body>
+</html>
